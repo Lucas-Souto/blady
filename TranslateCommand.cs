@@ -12,7 +12,8 @@ namespace Blady
 			Items,
 			Spells,
 			Monsters,
-			Dungeons
+			Dungeons,
+			Places
 		}
 
 		public async Task Define(DiscordSocketClient client)
@@ -30,6 +31,7 @@ namespace Blady
 					.AddChoice("spells", (int)Types.Spells)
 					.AddChoice("monsters", (int)Types.Monsters)
 					.AddChoice("dungeons", (int)Types.Dungeons)
+					.AddChoice("places", (int)Types.Places)
 					.WithType(ApplicationCommandOptionType.Integer))
 				.AddOption("text", ApplicationCommandOptionType.String, "The text you want to translate.", isRequired: true);
 
