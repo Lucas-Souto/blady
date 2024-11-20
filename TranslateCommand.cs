@@ -31,7 +31,7 @@ namespace Blady
 					.AddChoice("monsters", (int)Types.Monsters)
 					.AddChoice("dungeons", (int)Types.Dungeons)
 					.WithType(ApplicationCommandOptionType.Integer))
-				.AddOption("text", ApplicationCommandOptionType.String, "The text you want to translate.");
+				.AddOption("text", ApplicationCommandOptionType.String, "The text you want to translate.", isRequired: true);
 
 			await client.CreateGlobalApplicationCommandAsync(builder.Build());
 		}
