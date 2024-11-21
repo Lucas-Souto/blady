@@ -41,6 +41,10 @@ namespace Blady
 
 				await connection.OpenAsync();
 
+				Console.WriteLine("Creating commands internally...");
+				await AddCommand(new TranslateCommand());
+				Console.WriteLine("Commands created!");
+
 				client.Log += Log;
 				client.Ready += Ready;
 				client.SlashCommandExecuted += SlashHandler;
@@ -70,6 +74,8 @@ namespace Blady
 			{
 				if (redefine)
 				{
+					Console.WriteLine("Defining commands on Discord...");
+
 					redefine = true;
 
 					IReadOnlyCollection<SocketApplicationCommand> remove = await client.GetGlobalApplicationCommandsAsync();
@@ -78,8 +84,6 @@ namespace Blady
 
 					Console.WriteLine("Commands defined!");
 				}
-
-				await AddCommand(new TranslateCommand());
 			}
 			catch (HttpException exception)
 			{

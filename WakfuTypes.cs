@@ -26,7 +26,6 @@ namespace Blady
 
 	public struct WakfuReference
 	{
-		public WakfuLocalizedString title;
-		public WakfuLocalizedString? description;
+		public WakfuLocalizedString? title, description;
 	}
 }
