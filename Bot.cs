@@ -2,22 +2,25 @@ using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 using Newtonsoft.Json;
+using Npgsql;
 
 namespace Blady
 {
 	public static class Bot
 	{
-		private static bool started, redefine;
+		private static bool started, redefine, devMode;
 		private static Dictionary<string, string> access = new();
 		private static Dictionary<string, ICommand> commands = new();
 		private static DiscordSocketClient client;
+		private static NpgsqlConnection connection;
 
-		public static async Task Start(bool redefine)
+		public static async Task Start(bool redefine, bool devMode)
 		{
 			if (!started)
 			{
 				started = true;
 				Bot.redefine = redefine;
+				Bot.devMode = devMode;
 				DiscordSocketConfig config = new() { GatewayIntents = GatewayIntents.None };
 				client = new(config);
 
@@ -33,11 +36,16 @@ namespace Blady
 					}
 				}
 
+				connection = new NpgsqlConnection(string.Format("Host={0};Username={1};Password={2};Database={3}",
+					"localhost", access["db_login"], access["db_password"], access[devMode ? "db_dev" : "db"]));
+
+				await connection.OpenAsync();
+
 				client.Log += Log;
 				client.Ready += Ready;
 				client.SlashCommandExecuted += SlashHandler;
 
-				await client.LoginAsync(TokenType.Bot, access["token"]);
+				await client.LoginAsync(TokenType.Bot, access[devMode ? "token_dev" : "token"]);
 				await client.StartAsync();
 			}
 		}
@@ -53,6 +61,7 @@ namespace Blady
 		{
 			if (redefine) await command.Define(client);
 
+			await command.Initialize(connection);
 			commands.Add(command.Name, command);
 		}
 		private static async Task Ready()
