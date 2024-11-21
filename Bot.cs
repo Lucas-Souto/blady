@@ -93,7 +93,7 @@ namespace Blady
 
 		private static async Task SlashHandler(SocketSlashCommand command)
 		{
-			if (commands.TryGetValue(command.Data.Name, out ICommand commandDefinition)) await commandDefinition.Run(command);
+			if (commands.TryGetValue(command.Data.Name, out ICommand commandDefinition)) await commandDefinition.Run(command, connection);
 			else await command.RespondAsync("Hm... that command doesn't exist anymore. Try reloading the app! :D");
 		}
 	}

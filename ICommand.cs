@@ -9,6 +9,6 @@ namespace Blady
 
 		Task Define(DiscordSocketClient client);
 		Task Initialize(NpgsqlConnection connection);
-		Task Run(SocketSlashCommand command);
+		Task Run(SocketSlashCommand command, NpgsqlConnection connection);
 	}
 }

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Data;
+using System.Data.Common;
 using Discord;
 using Discord.WebSocket;
 using Newtonsoft.Json;
@@ -29,7 +30,8 @@ namespace Blady
 					description_en TEXT,
 					description_es TEXT,
 					description_pt TEXT
-				)", connection)) await command.ExecuteNonQueryAsync();
+				);
+				CREATE EXTENSION IF NOT EXISTS pg_trgm;", connection)) await command.ExecuteNonQueryAsync();
 		}
 		private NpgsqlCommand CreateInsertCommand(NpgsqlConnection connection)
 		{
@@ -82,7 +84,7 @@ namespace Blady
 				{
 					if (response.StatusCode != HttpStatusCode.Forbidden && response.StatusCode != HttpStatusCode.NotFound)// The cdn returns 403 when the route doesn't exist
 					{
-						WakfuReference[] references = JsonConvert.DeserializeObject<WakfuReference[]>(await response.Content.ReadAsStringAsync());
+						WakfuReference[] references = JsonConvert.DeserializeObject<WakfuReference[]>((await response.Content.ReadAsStringAsync()));
 
 						deleteCommand.Parameters["t"].Value = (int)option;
 
@@ -153,9 +155,58 @@ namespace Blady
 			await client.CreateGlobalApplicationCommandAsync(builder.Build());
 		}
 
-		public async Task Run(SocketSlashCommand command)
+		public async Task Run(SocketSlashCommand command, NpgsqlConnection connection)
 		{
-			await command.RespondAsync("This command wasn't implemented yet.");
+			await command.DeferAsync();
+
+			EmbedBuilder builder = new();
+
+			builder.Color = new(91, 68, 45);
+
+			await using (NpgsqlCommand searchCommand = new(@"SELECT type,
+				title_fr, title_en, title_es, title_pt,
+				description_fr, description_en, description_es, description_pt
+				FROM
+					(SELECT *, similarity(lower(title_fr), lower(@term)) AS sfr,
+						similarity(lower(title_en), lower(@term)) AS sen,
+						similarity(lower(title_es), lower(@term)) AS ses,
+						similarity(lower(title_pt), lower(@term)) AS spt
+						FROM translations) subquery
+				WHERE type = @type AND (sfr > .5 OR sen > .5 OR ses > .5 OR spt > .5)
+				ORDER BY greatest(sfr, sen, ses, spt) DESC
+				LIMIT 1", connection))
+			{
+				foreach (SocketSlashCommandDataOption option in command.Data.Options)
+				{
+					switch (option.Name)
+					{
+						case "type": searchCommand.Parameters.AddWithValue("type", option.Value); break;
+						case "text": searchCommand.Parameters.AddWithValue("term", option.Value); break;
+					}
+				}
+
+				DbDataReader reader = await searchCommand.ExecuteReaderAsync();
+				
+				if (!reader.HasRows)
+				{
+					builder.Title = "Not found!";
+					builder.Description = string.Format("`{0}` isn't on my database yet... :/\nGet in touch with the dev! :D", searchCommand.Parameters["term"].Value);
+				}
+				else while (reader.Read())
+				{
+					builder.Title = string.Format("{0}:", ((WakfuOptions)reader.GetInt32(0)).ToString());
+					builder.Description = "That was the closest one I found.";
+
+					builder.AddField(String.Format("[FR] {0}:", reader.GetString(1)), !reader.IsDBNull(5) ? reader.GetString(5) : "N/A");
+					builder.AddField(String.Format("[EN] {0}:", reader.GetString(2)), !reader.IsDBNull(6) ? reader.GetString(6) : "N/A");
+					builder.AddField(String.Format("[ES] {0}:", reader.GetString(3)), !reader.IsDBNull(7) ? reader.GetString(7) : "N/A");
+					builder.AddField(String.Format("[PT] {0}:", reader.GetString(4)), !reader.IsDBNull(8) ? reader.GetString(8) : "N/A");
+				}
+
+				await reader.CloseAsync();
+			}
+
+			await command.ModifyOriginalResponseAsync((m) => m.Embed = builder.Build());
 		}
 	}
 }
