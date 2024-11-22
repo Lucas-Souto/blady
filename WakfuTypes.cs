@@ -4,10 +4,7 @@ namespace Blady
 	{
 		States = 1,
 		Items,
-		Spells,
-		Monsters,
-		Dungeons,
-		Places
+		Monsters
 	}
 
 	public struct WakfuConfig

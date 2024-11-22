@@ -145,10 +145,7 @@ namespace Blady
 					.WithRequired(true)
 					.AddChoice("states", (int)WakfuOptions.States)
 					.AddChoice("items", (int)WakfuOptions.Items)
-					.AddChoice("spells", (int)WakfuOptions.Spells)
 					.AddChoice("monsters", (int)WakfuOptions.Monsters)
-					.AddChoice("dungeons", (int)WakfuOptions.Dungeons)
-					.AddChoice("places", (int)WakfuOptions.Places)
 					.WithType(ApplicationCommandOptionType.Integer))
 				.AddOption("text", ApplicationCommandOptionType.String, "The text you want to translate.", isRequired: true);
 

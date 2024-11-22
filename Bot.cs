@@ -14,6 +14,11 @@ namespace Blady
 		private static DiscordSocketClient client;
 		private static NpgsqlConnection connection;
 
+		private static async Task AddCommand(ICommand command)
+		{
+			await command.Initialize(connection);
+			commands.Add(command.Name, command);
+		}
 		public static async Task Start(bool redefine, bool devMode)
 		{
 			if (!started)
@@ -41,16 +46,16 @@ namespace Blady
 
 				await connection.OpenAsync();
 
-				Console.WriteLine("Creating commands internally...");
-				await AddCommand(new TranslateCommand());
-				Console.WriteLine("Commands created!");
-
 				client.Log += Log;
 				client.Ready += Ready;
 				client.SlashCommandExecuted += SlashHandler;
 
 				await client.LoginAsync(TokenType.Bot, access[devMode ? "token_dev" : "token"]);
 				await client.StartAsync();
+
+				Console.WriteLine("Creating commands internally...");
+				await AddCommand(new TranslateCommand());
+				Console.WriteLine("Commands created!");
 			}
 		}
 
@@ -61,13 +66,6 @@ namespace Blady
 			return Task.CompletedTask;
 		}
 
-		private static async Task AddCommand(ICommand command)
-		{
-			if (redefine) await command.Define(client);
-
-			await command.Initialize(connection);
-			commands.Add(command.Name, command);
-		}
 		private static async Task Ready()
 		{
 			try
@@ -81,6 +79,8 @@ namespace Blady
 					IReadOnlyCollection<SocketApplicationCommand> remove = await client.GetGlobalApplicationCommandsAsync();
 
 					foreach (var command in remove) await command.DeleteAsync();
+
+					foreach (var command in commands) await command.Value.Define(client);
 
 					Console.WriteLine("Commands defined!");
 				}
