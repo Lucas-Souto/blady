@@ -74,8 +74,6 @@ namespace Blady
 				{
 					Console.WriteLine("Defining commands on Discord...");
 
-					redefine = true;
-
 					IReadOnlyCollection<SocketApplicationCommand> remove = await client.GetGlobalApplicationCommandsAsync();
 
 					foreach (var command in remove) await command.DeleteAsync();
@@ -83,6 +81,8 @@ namespace Blady
 					foreach (var command in commands) await command.Value.Define(client);
 
 					Console.WriteLine("Commands defined!");
+
+					redefine = false;
 				}
 			}
 			catch (HttpException exception)
