@@ -1,3 +1,4 @@
+using Discord;
 using Discord.WebSocket;
 using Npgsql;
 
@@ -7,7 +8,7 @@ namespace Blady
 	{
 		public string Name { get; }
 
-		Task Define(DiscordSocketClient client);
+		SlashCommandBuilder Define();
 		Task Initialize(NpgsqlConnection connection);
 		Task Run(SocketSlashCommand command, NpgsqlConnection connection);
 	}

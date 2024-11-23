@@ -133,11 +133,9 @@ namespace Blady
 			}
 		}
 
-		public async Task Define(DiscordSocketClient client)
+		public SlashCommandBuilder Define()
 		{
-			SlashCommandBuilder builder = new();
-
-			builder.WithName(Name)
+			return new SlashCommandBuilder().WithName(Name)
 				.WithDescription("Get's the translations of an in-game thing.")
 				.AddOption(new SlashCommandOptionBuilder()
 					.WithName("type")
@@ -149,8 +147,6 @@ namespace Blady
 					.AddChoice("dungeons", (int)WakfuOptions.Dungeons)
 					.WithType(ApplicationCommandOptionType.Integer))
 				.AddOption("text", ApplicationCommandOptionType.String, "The text you want to translate.", isRequired: true);
-
-			await client.CreateGlobalApplicationCommandAsync(builder.Build());
 		}
 
 		public async Task Run(SocketSlashCommand command, NpgsqlConnection connection)

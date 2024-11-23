@@ -74,11 +74,21 @@ namespace Blady
 				{
 					Console.WriteLine("Defining commands on Discord...");
 
-					IReadOnlyCollection<SocketApplicationCommand> remove = await client.GetGlobalApplicationCommandsAsync();
+					SocketGuild guild = devMode ? client.GetGuild(1308725690434064456) : null;
+					IReadOnlyCollection<SocketApplicationCommand> remove;
+
+					if (devMode) remove = await guild.GetApplicationCommandsAsync();
+					else remove = await client.GetGlobalApplicationCommandsAsync();
 
 					foreach (var command in remove) await command.DeleteAsync();
 
-					foreach (var command in commands) await command.Value.Define(client);
+					foreach (var command in commands)
+					{
+						SlashCommandBuilder builder = command.Value.Define();
+
+						if (devMode) await guild.CreateApplicationCommandAsync(builder.Build());
+						else await client.CreateGlobalApplicationCommandAsync(builder.Build());
+					}
 
 					Console.WriteLine("Commands defined!");
 
